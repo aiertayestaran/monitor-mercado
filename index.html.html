@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitor de Noticias — Sector Fachadas</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0f0f;
+    --surface: #161818;
+    --surface2: #1e2020;
+    --border: #2a2d2d;
+    --accent: #c8f060;
+    --accent2: #60d0f0;
+    --accent3: #f0a060;
+    --accent4: #f060a0;
+    --text: #e8eaea;
+    --muted: #7a8080;
+    --trespa: #c8f060;
+    --fundermax: #60d0f0;
+    --equitone: #f0a060;
+    --kingspan: #f060a0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 32px 24px;
+  }
+
+  header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 40px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .header-title h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(24px, 4vw, 38px);
+    color: var(--text);
+    line-height: 1.1;
+  }
+
+  .header-title h1 span {
+    color: var(--accent);
+    font-style: italic;
+  }
+
+  .header-title p {
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 13px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .companies-strip {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+  }
+
+  .company-badge {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    border: 1px solid;
+    letter-spacing: 0.5px;
+  }
+
+  .badge-trespa { color: var(--trespa); border-color: var(--trespa); background: rgba(200,240,96,0.08); }
+  .badge-fundermax { color: var(--fundermax); border-color: var(--fundermax); background: rgba(96,208,240,0.08); }
+  .badge-equitone { color: var(--equitone); border-color: var(--equitone); background: rgba(240,160,96,0.08); }
+  .badge-kingspan { color: var(--kingspan); border-color: var(--kingspan); background: rgba(240,96,160,0.08); }
+
+  .controls {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .filter-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    padding: 7px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .filter-btn:hover, .filter-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(200,240,96,0.08);
+  }
+
+  .run-btn {
+    padding: 10px 24px;
+    border-radius: 8px;
+    border: none;
+    background: var(--accent);
+    color: #0e0f0f;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .run-btn:hover { background: #d8ff70; transform: translateY(-1px); }
+  .run-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .run-btn .spinner {
+    width: 12px; height: 12px;
+    border: 2px solid #0e0f0f;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+
+  .run-btn.loading .spinner { display: block; }
+  .run-btn.loading .btn-text { display: none; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Progress */
+  #progress-area {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+    display: none;
+  }
+
+  #progress-area.visible { display: block; }
+
+  .progress-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .progress-bar-wrap {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+    width: 0%;
+  }
+
+  .progress-steps {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+
+  .step {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .step.done { color: var(--accent); }
+  .step.active { color: var(--text); }
+
+  .step-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+
+  .step.done .step-dot { background: var(--accent); }
+  .step.active .step-dot { background: var(--text); animation: pulse 1s infinite; }
+
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.3; } }
+
+  /* Report */
+  #report-area { display: none; }
+  #report-area.visible { display: block; }
+
+  .report-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .report-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .report-meta strong {
+    color: var(--text);
+  }
+
+  .export-btn {
+    padding: 7px 16px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .export-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Summary bar */
+  .summary-bar {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .summary-card .num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    color: var(--accent);
+  }
+
+  .summary-card .lbl {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* Company sections */
+  .company-section {
+    margin-bottom: 32px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .company-header {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .company-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+  }
+
+  .company-name {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+  }
+
+  .company-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-left: auto;
+  }
+
+  /* News items */
+  .news-item {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.2s;
+  }
+
+  .news-item:last-child { border-bottom: none; }
+  .news-item:hover { background: var(--surface2); }
+
+  .news-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+
+  .news-category {
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .cat-financiero { background: rgba(200,240,96,0.15); color: var(--accent); }
+  .cat-producto { background: rgba(96,208,240,0.15); color: var(--accent2); }
+  .cat-alianza { background: rgba(240,160,96,0.15); color: var(--accent3); }
+  .cat-sostenibilidad { background: rgba(240,96,160,0.15); color: var(--accent4); }
+  .cat-corporativo { background: rgba(150,150,200,0.15); color: #a0a0f0; }
+  .cat-general { background: rgba(120,120,120,0.15); color: var(--muted); }
+
+  .news-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.4;
+    flex: 1;
+  }
+
+  .news-summary {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 10px;
+  }
+
+  .news-footer {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .news-source {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .news-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .news-relevance {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    margin-left: auto;
+  }
+
+  .rel-alta { color: var(--accent); }
+  .rel-media { color: var(--accent3); }
+  .rel-baja { color: var(--muted); }
+
+  /* Empty state */
+  #empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--muted);
+    display: block;
+  }
+
+  #empty-state.hidden { display: none; }
+
+  .empty-icon {
+    font-size: 40px;
+    margin-bottom: 16px;
+    opacity: 0.4;
+  }
+
+  .empty-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    margin-bottom: 8px;
+    color: var(--text);
+  }
+
+  .empty-sub {
+    font-size: 13px;
+    max-width: 340px;
+    margin: 0 auto;
+    line-height: 1.5;
+  }
+
+  /* Error */
+  .error-box {
+    background: rgba(240,96,96,0.1);
+    border: 1px solid rgba(240,96,96,0.3);
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: #f09090;
+    display: none;
+  }
+
+  .error-box.visible { display: block; }
+
+  /* Email modal */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.7);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px;
+    width: 100%;
+    max-width: 480px;
+    transform: translateY(12px);
+    transition: transform 0.2s;
+  }
+
+  .modal-overlay.open .modal { transform: translateY(0); }
+
+  .modal-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    margin-bottom: 6px;
+  }
+
+  .modal-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 22px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .modal-field {
+    margin-bottom: 16px;
+  }
+
+  .modal-field label {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .modal-field input, .modal-field textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+    resize: vertical;
+  }
+
+  .modal-field input:focus, .modal-field textarea:focus {
+    border-color: var(--accent);
+  }
+
+  .modal-field input::placeholder, .modal-field textarea::placeholder {
+    color: var(--muted);
+  }
+
+  .modal-hint {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 5px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 22px;
+    justify-content: flex-end;
+  }
+
+  .modal-cancel {
+    padding: 9px 18px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .modal-cancel:hover { border-color: var(--text); color: var(--text); }
+
+  .modal-send {
+    padding: 9px 22px;
+    border-radius: 7px;
+    border: none;
+    background: var(--accent);
+    color: #0e0f0f;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .modal-send:hover { background: #d8ff70; }
+
+  /* Print / PDF styles */
+  @media print {
+    body { background: #fff !important; color: #000 !important; padding: 20px; }
+    header, .companies-strip, .controls, #progress-area, #empty-state, .report-header, .modal-overlay { display: none !important; }
+    #report-area { display: block !important; }
+    .summary-bar { display: none; }
+    .company-section { border: 1px solid #ccc !important; margin-bottom: 20px; page-break-inside: avoid; }
+    .company-header { background: #f5f5f5 !important; padding: 10px 16px; }
+    .company-name { color: #000 !important; font-size: 16px; }
+    .company-dot { display: none; }
+    .news-item { border-bottom: 1px solid #eee !important; padding: 12px 16px; }
+    .news-item:hover { background: none !important; }
+    .news-title { color: #000 !important; font-size: 13px; }
+    .news-summary { color: #333 !important; font-size: 12px; }
+    .news-category { border: 1px solid #999; color: #333 !important; background: #f0f0f0 !important; }
+    .news-source, .news-date, .news-relevance { color: #666 !important; font-size: 10px; }
+    .print-header { display: block !important; text-align: center; margin-bottom: 24px; border-bottom: 2px solid #000; padding-bottom: 12px; }
+    .print-header h2 { font-size: 20px; margin-bottom: 4px; }
+    .print-header p { font-size: 12px; color: #555; }
+  }
+
+  .print-header { display: none; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+<header>
+  <div class="header-title">
+    <h1>Monitor de <span>Mercado</span></h1>
+    <p>// Sector fachadas & materiales de construcción</p>
+  </div>
+</header>
+
+<div class="companies-strip">
+  <span class="company-badge badge-trespa">● Trespa</span>
+  <span class="company-badge badge-fundermax">● FunderMax</span>
+  <span class="company-badge badge-equitone">● Etex / Equitone</span>
+  <span class="company-badge badge-kingspan">● Kingspan</span>
+</div>
+
+<div class="controls">
+  <div class="filter-group" id="cat-filters">
+    <button class="filter-btn active" data-cat="all">Todas</button>
+    <button class="filter-btn" data-cat="financiero">Financiero</button>
+    <button class="filter-btn" data-cat="producto">Producto</button>
+    <button class="filter-btn" data-cat="alianza">Alianza</button>
+    <button class="filter-btn" data-cat="sostenibilidad">Sostenibilidad</button>
+    <button class="filter-btn" data-cat="corporativo">Corporativo</button>
+  </div>
+  <button class="run-btn" id="run-btn" onclick="runMonitor()">
+    <div class="spinner"></div>
+    <span class="btn-text">⚡ Generar Informe</span>
+  </button>
+</div>
+
+<div id="error-box" class="error-box"></div>
+
+<div id="progress-area">
+  <div class="progress-label" id="progress-label">Iniciando búsqueda...</div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progress-bar"></div>
+  </div>
+  <div class="progress-steps">
+    <div class="step" id="step-search"><span class="step-dot"></span>Buscando noticias</div>
+    <div class="step" id="step-analyze"><span class="step-dot"></span>Analizando con IA</div>
+    <div class="step" id="step-categorize"><span class="step-dot"></span>Categorizando</div>
+    <div class="step" id="step-report"><span class="step-dot"></span>Generando informe</div>
+  </div>
+</div>
+
+<div id="empty-state">
+  <div class="empty-icon">📡</div>
+  <div class="empty-title">Listo para monitorizar</div>
+  <div class="empty-sub">Pulsa "Generar Informe" para buscar las últimas noticias sobre las 4 empresas y analizarlas con IA.</div>
+</div>
+
+<div id="report-area">
+  <div class="print-header"><h2>Informe de Mercado — Sector Fachadas</h2><p id="print-date"></p></div>
+  <div class="report-header">
+    <div class="report-meta">
+      Informe generado: <strong id="report-date">—</strong>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="export-btn" onclick="exportReport()">↓ Exportar TXT</button>
+      <button class="export-btn" onclick="exportPDF()" style="border-color:#c8f060;color:#c8f060;">↓ Exportar PDF</button>
+      <button class="export-btn" onclick="openEmailModal()" style="border-color:#60d0f0;color:#60d0f0;">✉ Enviar por Gmail</button>
+    </div>
+  </div>
+  <div class="summary-bar" id="summary-bar"></div>
+  <div id="news-container"></div>
+</div>
+
+<!-- Email Modal -->
+<div class="modal-overlay" id="email-modal">
+  <div class="modal">
+    <div class="modal-title">Enviar por Gmail</div>
+    <div class="modal-sub">// Se abrirá Gmail con el informe listo para enviar</div>
+    <div class="modal-field">
+      <label>Destinatario(s)</label>
+      <input type="email" id="email-to" placeholder="nombre@empresa.com" />
+      <div class="modal-hint">Para varios destinatarios, sepáralos con coma</div>
+    </div>
+    <div class="modal-field">
+      <label>Asunto</label>
+      <input type="text" id="email-subject" value="Informe de mercado — Sector Fachadas" />
+    </div>
+    <div class="modal-field">
+      <label>Nota introductoria (opcional)</label>
+      <textarea id="email-note" rows="3" placeholder="Añade un mensaje personal antes del informe..."></textarea>
+    </div>
+    <div class="modal-field">
+      <label>Filtrar noticias</label>
+      <div style="display:flex;gap:12px;margin-top:4px;flex-wrap:wrap;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text);text-transform:none;letter-spacing:0;margin-bottom:0;cursor:pointer;">
+          <input type="radio" name="email-filter" id="inc-all" value="all" checked style="accent-color:var(--accent);width:auto;"> Todas las noticias
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text);text-transform:none;letter-spacing:0;margin-bottom:0;cursor:pointer;">
+          <input type="radio" name="email-filter" id="inc-only-high" value="high" style="accent-color:var(--accent);width:auto;"> Solo relevancia alta
+        </label>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeEmailModal()">Cancelar</button>
+      <button class="modal-send" onclick="sendViaGmail()">✉ Abrir en Gmail</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const COMPANIES = [
+  { id: 'trespa', name: 'Trespa', color: '#c8f060', queries: ['Trespa International news', 'Trespa building facade', 'Trespa financial results'] },
+  { id: 'fundermax', name: 'FunderMax', color: '#60d0f0', queries: ['FunderMax facade panels news', 'FunderMax company news', 'FunderMax exterior cladding'] },
+  { id: 'equitone', name: 'Etex / Equitone', color: '#f0a060', queries: ['Equitone facade news', 'Etex group financial news', 'Etex Equitone building products'] },
+  { id: 'kingspan', name: 'Kingspan', color: '#f060a0', queries: ['Kingspan Group news 2024 2025', 'Kingspan financial results', 'Kingspan insulation facade'] }
+];
+
+let allResults = [];
+let activeFilter = 'all';
+let lastRawData = '';
+
+function setStep(stepId, state) {
+  const step = document.getElementById(stepId);
+  step.className = 'step ' + state;
+}
+
+function setProgress(pct, label) {
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = label;
+}
+
+async function runMonitor() {
+  const btn = document.getElementById('run-btn');
+  btn.disabled = true;
+  btn.classList.add('loading');
+
+  document.getElementById('empty-state').classList.add('hidden');
+  document.getElementById('report-area').classList.remove('visible');
+  document.getElementById('error-box').classList.remove('visible');
+
+  const prog = document.getElementById('progress-area');
+  prog.classList.add('visible');
+  ['step-search','step-analyze','step-categorize','step-report'].forEach(s => setStep(s,''));
+
+  setProgress(5, 'Iniciando búsqueda de noticias...');
+  setStep('step-search', 'active');
+
+  try {
+    const today = new Date().toLocaleDateString('es-ES', { year:'numeric', month:'long', day:'numeric' });
+
+    const systemPrompt = `Eres un analista de mercado especializado en el sector de materiales de construcción y fachadas.
+Busca noticias recientes sobre la empresa indicada y responde ÚNICAMENTE con un objeto JSON válido.
+Sin texto adicional, sin backticks, sin markdown. Solo el JSON.`;
+
+    const companyDefs = [
+      { id: 'trespa',    name: 'Trespa',          desc: 'fabricante neerlandés de paneles HPL para fachadas ventiladas' },
+      { id: 'fundermax', name: 'FunderMax',         desc: 'fabricante austriaco de paneles de fachada ventilada y revestimientos' },
+      { id: 'equitone',  name: 'Etex / Equitone',  desc: 'grupo belga Etex y su marca Equitone de paneles de fibrocemento para fachadas' },
+      { id: 'kingspan',  name: 'Kingspan',          desc: 'grupo irlandés líder en sistemas de fachada e insulación de edificios' }
+    ];
+
+    const makePrompt = (c) => `Fecha actual: ${today}
+
+Busca las noticias más recientes (últimos 6 meses) sobre ${c.name} (${c.desc}).
+Busca sobre: resultados financieros, ventas, nuevos productos, alianzas/adquisiciones, sostenibilidad, nombramientos, proyectos.
+
+Responde SOLO con este JSON (sin nada fuera):
+{"id":"${c.id}","name":"${c.name}","news":[{"title":"...","summary":"Resumen de 2 frases.","category":"financiero|producto|alianza|sostenibilidad|corporativo|general","source":"nombre del medio","date":"Mes Año","relevance":"alta|media|baja"}]}
+
+Incluye entre 3 y 5 noticias reales y verificables. El JSON debe ser válido y completo.`;
+
+    const fetchCompany = async (c) => {
+      const resp = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 2000,
+          tools: [{ type: "web_search_20250305", name: "web_search" }],
+          system: systemPrompt,
+          messages: [{ role: "user", content: makePrompt(c) }]
+        })
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data.error?.message || 'Error API');
+      const raw = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
+      // Extract JSON robustly
+      const match = raw.match(/\{[\s\S]*\}/);
+      if (!match) throw new Error(`Sin JSON para ${c.name}`);
+      return JSON.parse(match[0]);
+    };
+
+    setProgress(10, 'Buscando noticias de Trespa...');
+    setStep('step-search', 'active');
+    const r1 = await fetchCompany(companyDefs[0]);
+
+    setProgress(30, 'Buscando noticias de FunderMax...');
+    const r2 = await fetchCompany(companyDefs[1]);
+
+    setProgress(55, 'Buscando noticias de Etex / Equitone...');
+    setStep('step-search', 'done');
+    setStep('step-analyze', 'active');
+    const r3 = await fetchCompany(companyDefs[2]);
+
+    setProgress(75, 'Buscando noticias de Kingspan...');
+    const r4 = await fetchCompany(companyDefs[3]);
+
+    setStep('step-analyze', 'done');
+    setStep('step-categorize', 'active');
+    setProgress(88, 'Categorizando y construyendo informe...');
+
+    await new Promise(r => setTimeout(r, 400));
+
+    setStep('step-categorize', 'done');
+    setStep('step-report', 'active');
+    setProgress(95, 'Construyendo informe...');
+
+    allResults = [r1, r2, r3, r4];
+    renderReport(today);
+
+    setProgress(100, 'Informe completado');
+    setStep('step-report', 'done');
+
+    setTimeout(() => {
+      prog.classList.remove('visible');
+    }, 1200);
+
+    document.getElementById('report-area').classList.add('visible');
+
+  } catch(err) {
+    const errBox = document.getElementById('error-box');
+    errBox.textContent = '⚠ Error: ' + err.message + '. Por favor inténtalo de nuevo.';
+    errBox.classList.add('visible');
+    document.getElementById('empty-state').classList.remove('hidden');
+    prog.classList.remove('visible');
+  }
+
+  btn.disabled = false;
+  btn.classList.remove('loading');
+}
+
+function renderReport(dateStr) {
+  document.getElementById('report-date').textContent = dateStr;
+
+  // Summary counts
+  let totalNews = 0;
+  const catCounts = {};
+  allResults.forEach(company => {
+    company.news.forEach(n => {
+      totalNews++;
+      catCounts[n.category] = (catCounts[n.category] || 0) + 1;
+    });
+  });
+
+  const topCat = Object.entries(catCounts).sort((a,b) => b[1]-a[1])[0];
+
+  const summaryBar = document.getElementById('summary-bar');
+  summaryBar.innerHTML = `
+    <div class="summary-card"><div class="num">${totalNews}</div><div class="lbl">noticias encontradas</div></div>
+    <div class="summary-card"><div class="num">${allResults.length}</div><div class="lbl">empresas</div></div>
+    <div class="summary-card"><div class="num">${catCounts['financiero'] || 0}</div><div class="lbl">noticias financieras</div></div>
+    <div class="summary-card"><div class="num">${catCounts['alianza'] || 0}</div><div class="lbl">alianzas / M&A</div></div>
+    <div class="summary-card"><div class="num">${catCounts['sostenibilidad'] || 0}</div><div class="lbl">sostenibilidad</div></div>
+  `;
+
+  renderNewsFiltered();
+}
+
+function renderNewsFiltered() {
+  const container = document.getElementById('news-container');
+  container.innerHTML = '';
+
+  const companyColors = {
+    trespa: '#c8f060', fundermax: '#60d0f0', equitone: '#f0a060', kingspan: '#f060a0'
+  };
+
+  allResults.forEach(company => {
+    const filtered = activeFilter === 'all'
+      ? company.news
+      : company.news.filter(n => n.category === activeFilter);
+
+    if (filtered.length === 0) return;
+
+    const color = companyColors[company.id] || '#888';
+
+    const section = document.createElement('div');
+    section.className = 'company-section';
+    section.innerHTML = `
+      <div class="company-header">
+        <div class="company-dot" style="background:${color}"></div>
+        <div class="company-name" style="color:${color}">${company.name}</div>
+        <div class="company-count">${filtered.length} noticia${filtered.length!==1?'s':''}</div>
+      </div>
+      ${filtered.map(n => `
+        <div class="news-item">
+          <div class="news-top">
+            <span class="news-category cat-${n.category}">${n.category.toUpperCase()}</span>
+            <div class="news-title">${n.title}</div>
+          </div>
+          <div class="news-summary">${n.summary}</div>
+          <div class="news-footer">
+            <span class="news-source">📰 ${n.source}</span>
+            <span class="news-date">📅 ${n.date}</span>
+            <span class="news-relevance rel-${n.relevance}">● Relevancia ${n.relevance}</span>
+          </div>
+        </div>
+      `).join('')}
+    `;
+    container.appendChild(section);
+  });
+}
+
+// Filter buttons
+document.getElementById('cat-filters').addEventListener('click', e => {
+  if (!e.target.classList.contains('filter-btn')) return;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  e.target.classList.add('active');
+  activeFilter = e.target.dataset.cat;
+  if (allResults.length > 0) renderNewsFiltered();
+});
+
+function exportReport() {
+  if (!allResults.length) return;
+  const today = document.getElementById('report-date').textContent;
+  let txt = `INFORME DE MERCADO — SECTOR FACHADAS\nFecha: ${today}\n${'='.repeat(50)}\n\n`;
+  allResults.forEach(company => {
+    txt += `\n## ${company.name.toUpperCase()}\n${'-'.repeat(40)}\n`;
+    company.news.forEach((n, i) => {
+      txt += `\n${i+1}. [${n.category.toUpperCase()}] ${n.title}\n`;
+      txt += `   ${n.summary}\n`;
+      txt += `   Fuente: ${n.source} | Fecha: ${n.date} | Relevancia: ${n.relevance}\n`;
+    });
+  });
+  const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `informe_mercado_${new Date().toISOString().split('T')[0]}.txt`;
+  a.click();
+}
+
+// Email modal
+function openEmailModal() {
+  if (!allResults.length) return;
+  document.getElementById('email-modal').classList.add('open');
+}
+
+function closeEmailModal() {
+  document.getElementById('email-modal').classList.remove('open');
+}
+
+document.getElementById('email-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeEmailModal();
+});
+
+function buildEmailBody() {
+  const today = document.getElementById('report-date').textContent;
+  const onlyHigh = document.querySelector('input[name="email-filter"]:checked').value === 'high';
+  const note = document.getElementById('email-note').value.trim();
+
+  let body = '';
+  if (note) body += note + '\n\n';
+  body += 'INFORME DE MERCADO — SECTOR FACHADAS\n';
+  body += 'Fecha: ' + today + '\n';
+  body += '================================================\n';
+
+  let totalIncluded = 0;
+  allResults.forEach(company => {
+    const news = onlyHigh ? company.news.filter(n => n.relevance === 'alta') : company.news;
+    if (!news.length) return;
+    body += '\n\n' + company.name.toUpperCase() + '\n';
+    body += '——————————————————————————————\n';
+    news.forEach((n, i) => {
+      totalIncluded++;
+      body += '\n' + (i+1) + '. [' + n.category.toUpperCase() + '] ' + n.title + '\n';
+      body += '   ' + n.summary + '\n';
+      body += '   Fuente: ' + n.source + ' | ' + n.date + ' | Relevancia: ' + n.relevance + '\n';
+    });
+  });
+
+  body += '\n\n================================================\n';
+  body += totalIncluded + ' noticias — Monitor de Mercado / Sector Fachadas';
+  return body;
+}
+
+
+function exportPDF() {
+  if (!allResults.length) return;
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const today = document.getElementById('report-date').textContent;
+  const pageW = 210;
+  const margin = 14;
+  const maxW = pageW - margin * 2;
+  let y = 18;
+
+  const checkPage = (needed) => {
+    if (y + needed > 280) { doc.addPage(); y = 18; }
+  };
+
+  // Header
+  doc.setFillColor(14, 15, 15);
+  doc.rect(0, 0, 210, 28, 'F');
+  doc.setTextColor(200, 240, 96);
+  doc.setFontSize(16);
+  doc.setFont('helvetica', 'bold');
+  doc.text('INFORME DE MERCADO', margin, 12);
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(180, 190, 190);
+  doc.text('Sector Fachadas & Materiales de Construccion', margin, 19);
+  doc.text('Generado: ' + today, margin, 25);
+  y = 36;
+
+  const companyColors = {
+    trespa:    [200, 240, 96],
+    fundermax: [96, 208, 240],
+    equitone:  [240, 160, 96],
+    kingspan:  [240, 96, 160]
+  };
+
+  const catLabels = {
+    financiero: 'FINANCIERO', producto: 'PRODUCTO', alianza: 'ALIANZA',
+    sostenibilidad: 'SOSTENIBILIDAD', corporativo: 'CORPORATIVO', general: 'GENERAL'
+  };
+
+  allResults.forEach(company => {
+    if (!company.news || !company.news.length) return;
+    const col = companyColors[company.id] || [150,150,150];
+
+    checkPage(16);
+    // Company header bar
+    doc.setFillColor(30, 32, 32);
+    doc.rect(margin - 2, y - 5, maxW + 4, 10, 'F');
+    doc.setDrawColor(...col);
+    doc.setLineWidth(0.8);
+    doc.line(margin - 2, y - 5, margin - 2, y + 5);
+    doc.setTextColor(...col);
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text(company.name.toUpperCase(), margin + 3, y + 1);
+    doc.setTextColor(120, 130, 130);
+    doc.setFontSize(8);
+    doc.text(company.news.length + ' noticias', pageW - margin - 2, y + 1, { align: 'right' });
+    y += 12;
+
+    company.news.forEach((n, i) => {
+      // Title lines
+      doc.setFontSize(9.5);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(230, 234, 234);
+      const titleLines = doc.splitTextToSize(n.title, maxW - 28);
+      checkPage(titleLines.length * 5 + 18);
+
+      // Category badge
+      doc.setFillColor(40, 44, 44);
+      doc.roundedRect(margin, y - 3.5, 26, 5.5, 1, 1, 'F');
+      doc.setTextColor(...col);
+      doc.setFontSize(6.5);
+      doc.setFont('helvetica', 'bold');
+      doc.text(catLabels[n.category] || n.category.toUpperCase(), margin + 13, y + 0.5, { align: 'center' });
+
+      // Title
+      doc.setTextColor(230, 234, 234);
+      doc.setFontSize(9.5);
+      doc.setFont('helvetica', 'bold');
+      doc.text(titleLines, margin + 29, y + 0.5);
+      y += Math.max(titleLines.length * 5, 6);
+
+      // Summary
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8.5);
+      doc.setTextColor(140, 150, 150);
+      const summaryLines = doc.splitTextToSize(n.summary, maxW);
+      checkPage(summaryLines.length * 4.5 + 8);
+      doc.text(summaryLines, margin, y);
+      y += summaryLines.length * 4.5 + 2;
+
+      // Meta line
+      doc.setFontSize(7.5);
+      doc.setTextColor(100, 110, 110);
+      const relColor = n.relevance === 'alta' ? [200,240,96] : n.relevance === 'media' ? [240,160,96] : [100,110,110];
+      doc.text(n.source + '   ·   ' + n.date, margin, y);
+      doc.setTextColor(...relColor);
+      doc.text('● ' + n.relevance.toUpperCase(), pageW - margin, y, { align: 'right' });
+      y += 3;
+
+      // Divider
+      if (i < company.news.length - 1) {
+        doc.setDrawColor(42, 45, 45);
+        doc.setLineWidth(0.3);
+        doc.line(margin, y, pageW - margin, y);
+        y += 5;
+      }
+    });
+    y += 10;
+  });
+
+  // Footer on each page
+  const pageCount = doc.getNumberOfPages();
+  for (let p = 1; p <= pageCount; p++) {
+    doc.setPage(p);
+    doc.setFontSize(7);
+    doc.setTextColor(80, 88, 88);
+    doc.text('Monitor de Mercado · Sector Fachadas', margin, 292);
+    doc.text('Pag. ' + p + ' / ' + pageCount, pageW - margin, 292, { align: 'right' });
+  }
+
+  const fecha = new Date().toISOString().split('T')[0];
+  doc.save('informe_mercado_' + fecha + '.pdf');
+}
+
+function sendViaGmail() {
+  const to = document.getElementById('email-to').value.trim();
+  const subject = document.getElementById('email-subject').value.trim() || 'Informe de mercado — Sector Fachadas';
+  const toInput = document.getElementById('email-to');
+
+  if (!to) {
+    toInput.style.borderColor = '#f06060';
+    toInput.focus();
+    setTimeout(() => toInput.style.borderColor = '', 1500);
+    return;
+  }
+
+  const body = buildEmailBody();
+  // Gmail compose URL - works reliably, opens in new tab
+  const gmailBase = 'https://mail.google.com/mail/u/0/?view=cm&fs=1&tf=1';
+  const params = '&to=' + encodeURIComponent(to)
+    + '&su=' + encodeURIComponent(subject)
+    + '&body=' + encodeURIComponent(body.substring(0, 1800));
+  const fullUrl = gmailBase + params;
+  const win = window.open(fullUrl, '_blank', 'noopener');
+  if (!win) {
+    // Fallback: direct link click
+    const a = document.createElement('a');
+    a.href = fullUrl;
+    a.target = '_blank';
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+  closeEmailModal();
+}
+</script>
+</body>
+</html>
